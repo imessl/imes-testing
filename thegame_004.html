@@ -1,0 +1,249 @@
+
+<!DOCTYPE HTML>
+<html>
+<head>
+<!--
+// below is the code needed to preload an image for use. has to be in header.
+//going to be using shapes until i can find/write a sprite engine so i dont need it now.
+//<script>
+//img = new Image(16,16);
+//img.src = "http://www.seamusimes.com/img.gif";
+//</script>-->
+
+    
+    <title>Man this is hard. Keep Going!</title>
+</head>
+<body>
+<canvas id="canvas" style="border:1px solid #000"></canvas>
+
+<script>
+(function() {
+var requestAnimationFrame = window.requestAnimationFrame || window.mozRequestAnimationFrame || window.webkitRequestAnimationFrame || window.msRequestAnimationFrame;
+window.requestAnimationFrame = requestAnimationFrame;})();
+    
+													
+
+//variable declarations
+
+//get canvas and context for reference
+var canvas = document.getElementById("canvas"),
+ctx = canvas.getContext("2d"),
+width = 500,
+height = 500,
+player = {
+	x : width/2,
+	y : height/2,
+	width : 32,
+	height : 32,
+	xvel : 0,
+	yvel : 0,
+	speed : 5,
+	wood : 0};
+
+testblock ={
+	x : width/4,
+	y : height/2,
+	width : 64,
+	height : 64,
+	health : 5};
+
+//add event listener for up/down of any key and store it in keys
+keys = [];
+document.body.addEventListener("keydown", function(e) {
+	keys[e.keyCode] = true;});
+
+document.body.addEventListener("keyup", function(e) {
+	keys[e.keyCode] = false;});
+
+
+
+canvas.width = width;
+canvas.height = height;
+
+const GRAVE = 0;
+													
+//----------------------------------------------------------------------------->FUNCTIONS<--------------
+													
+
+function blockDie(){
+	testBlock.x = GRAVE;
+	testBlock.y = GRAVE;
+	//testBlock.width = GRAVE;
+	//testBlock.height = GRAVE;
+	}
+
+													
+
+//bounce off of an object collided with.
+
+function bounceOff(){
+	this.distx = player.x+16;
+	this.distx -= testblock.x+32;
+	this.distx = Math.abs(this.distx);
+	//this.distx = Math.abs(player.x-testblock.x+16);
+	this.disty = Math.abs(player.y-testblock.y+16);
+
+	player.wood += 1;
+	testblock.health -= 1;
+
+	//sides of block
+	if (this.distx > 28){
+
+		if(player.x-16 > testblock.x){player.x += 5;player.xvel = 5;}
+		else{player.x += -5;player.xvel = -5;}
+	}
+													
+	if (player.y-16 > testblock.y){ //bottom half of block 
+		if (this.distx < 28){
+		player.yvel = 5;
+		player.y += 5;
+		}
+	}
+
+	if (player.y-16 < testblock.y){ //top half of block 
+		if (this.distx < 28){
+		player.yvel = -5;
+		player.y += -5;
+		}
+	}
+}
+//What happens when there is a collision
+
+function yesHit(){
+	bounceOff();
+
+	alert("yesHit works");
+}
+
+													
+//simple collision test. compares if 2 rectangles are intersecting
+
+function simplehit(){
+/*
+	px1.this = player.x;
+	px2 this = player.x + 32;
+
+	py1.this = player.y;
+	py2.this = player.y + 32;
+
+	tx1.this = testblock.x;
+	tx2.this = testblock.x + 64
+*/
+
+	if(player.x < testblock.x+64 && player.x+32 > testblock.x){
+		if(player.y+32 > testblock.y && player.y < testblock.y+64){
+			bounceOff();
+		}
+	}
+}
+function update(){
+    // check keys and modify velocy accordingly
+	if (keys[38]) {
+	// up arrow
+		if (player.yvel > -player.speed) {
+		player.yvel += -.4;
+		}
+	}
+
+	if (keys[40]) {
+	// down arrow
+		if (player.yvel < player.speed) {
+			player.yvel += .4;
+		}
+	}
+
+	if (keys[39]) {
+	// right arrow
+		if (player.xvel < player.speed) {
+			player.xvel += .4;
+		}
+	}
+
+	if (keys[37]) {
+	// left arrow
+		if (player.xvel > -player.speed) {
+			player.xvel += -.4;
+		}
+	}
+
+//move player based on his velocity
+
+	
+	player.x += player.xvel;
+	player.y += player.yvel;
+
+
+//friction system. slow player based on what dir he is moving
+	if (player.xvel > 0){
+		player.xvel += -.17;
+	}
+	else if (player.xvel < 0) {
+		player.xvel += .17;
+	}
+
+	if (player.yvel > 0){
+		player.yvel += -.17;
+	}
+	else if (player.yvel < 0){
+		player.yvel += .17;
+	}
+
+
+//if player is close to 0 velocity, set it to 0.
+	if (Math.abs(player.xvel) < .1){player.xvel = 0;}
+	if (Math.abs(player.yvel) < .1){player.yvel = 0;}
+
+//clear the screen
+	ctx.clearRect(0,0,500,500);
+
+
+//draw the player
+	ctx.beginPath();
+	ctx.rect(player.x, player.y, player.width, player.height);
+	ctx.fillStyle = "blue";
+	ctx.fill();
+	ctx.closePath();
+
+//draw amt of wood
+
+	ctx.beginPath();
+	ctx.fillStyle = "black";
+	ctx.font = "18px Arial";
+	ctx.fillText("wood: "+player.wood,player.x-12,player.y-20);
+	ctx.closePath();
+
+//draw the testblock
+	if (testblock.health > 0){
+	ctx.beginPath();
+	ctx.rect(testblock.x, testblock.y-222, testblock.width, 256);
+	ctx.arc(testblock.x+32, testblock.y+32, testblock.width/2, 0, Math.PI);
+	ctx.fillStyle = "brown";
+	ctx.fill();
+	ctx.closePath();
+
+	ctx.beginPath();
+	ctx.arc(testblock.x+32, testblock.y-200, 128, 0, 2*Math.PI);
+	ctx.fillStyle = "green";
+	ctx.fill();
+	ctx.closePath();
+	}
+	else{
+	//blockDie();
+	}
+
+//test if collision works
+		
+	simplehit();
+//push changes to the screen
+	requestAnimationFrame(update);    
+}
+
+													
+
+//wait for the game to load, then start the gameloop
+window.addEventListener("load", function(){update();});
+
+</script>
+
+</body>
+</html>
